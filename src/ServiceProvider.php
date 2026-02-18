@@ -21,6 +21,10 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         ], 'config');
 
         $this->publishes([
+            self::VIEW_PATH => config_path('user-activity.php')
+        ], 'config');
+
+        $this->publishes([
             self::MIGRATION_PATH => database_path('migrations')
         ], 'migrations');
     }
