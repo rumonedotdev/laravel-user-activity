@@ -17,7 +17,16 @@ export default defineConfig({
     build: {
         outDir: "dist",
         emptyOutDir: true,
-        manifest: true
+        manifest: true,
+
+        rollupOptions: {
+            input: ['views/ts/main.ts', 'views/css/style.css'],
+            output: {
+                entryFileNames: '[name].js',
+                chunkFileNames: '[name].js',
+                assetFileNames: '[name].[ext]',
+            },
+        }
     },
 
 

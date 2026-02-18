@@ -10,7 +10,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     const CONFIG_PATH = __DIR__ . '/../config/user-activity.php';
     const ROUTE_PATH = __DIR__ . '/../routes';
     const VIEW_PATH = __DIR__ . '/../views';
-    const ASSET_PATH = __DIR__ . '/../assets';
+    const DIST_PATH = __DIR__ . '/../dist';
     const MIGRATION_PATH = __DIR__ . '/../migrations';
 
 
@@ -21,12 +21,16 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         ], 'config');
 
         $this->publishes([
-            self::VIEW_PATH => config_path('user-activity.php')
-        ], 'config');
+            self::VIEW_PATH => resource_path('views/vendor/LaravelUserActivity')
+        ], 'views');
 
         $this->publishes([
             self::MIGRATION_PATH => database_path('migrations')
         ], 'migrations');
+
+        $this->publishes([
+            self::DIST_PATH => public_path('vendor/laravel-user-activity')
+        ], 'assets');
     }
 
     public function boot()
