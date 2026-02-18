@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { LogEntry, LogType } from '../types/activity'
+import type { LogEntry } from '../types/activity'
 
 defineProps<{
   data: LogEntry[]
@@ -10,70 +10,117 @@ const emit = defineEmits<{
   (event: 'show', log: LogEntry): void
 }>()
 
-function isDeleteOrLockout(type: LogType): boolean {
-  return type === 'delete' || type === 'lockout'
+function actionLabel(logType: string): string {
+  if (!logType) {
+    return 'Unknown'
+  }
+
+  return `${logType.charAt(0).toUpperCase()}${logType.slice(1)}`
 }
 
-function isEditOrDelete(type: LogType): boolean {
-  return type === 'edit' || type === 'delete'
+function statusLabel(logType: string): 'success' | 'warning' | 'error' {
+  if (logType === 'delete') {
+    return 'error'
+  }
+
+  if (logType === 'lockout') {
+    return 'warning'
+  }
+
+  return 'success'
+}
+
+function detailsText(log: LogEntry): string {
+  if (log.log_type === 'create') {
+    return `Created record in ${log.table_name}`
+  }
+
+  if (log.log_type === 'edit') {
+    const updatedFields = Object.keys(log.json_data ?? {}).filter((field) => field !== 'id')
+    if (updatedFields.length > 0) {
+      return `Updated ${updatedFields.slice(0, 2).join(', ')}`
+    }
+
+    return `Updated record in ${log.table_name}`
+  }
+
+  if (log.log_type === 'delete') {
+    return `Deleted record from ${log.table_name}`
+  }
+
+  if (log.log_type === 'login') {
+    return 'Authenticated successfully'
+  }
+
+  if (log.log_type === 'lockout') {
+    return 'Too many login attempts'
+  }
+
+  return `${actionLabel(log.log_type)} activity`
 }
 </script>
 
 <template>
-  <div class="log_data_wrapper">
-    <div class="loader" v-show="isLoading">
-      <div class="spinner">
-        <div class="bounce1"></div>
-        <div class="bounce2"></div>
-        <div class="bounce3"></div>
-      </div>
+  <div class="relative overflow-hidden rounded-xl border border-[#e2e5eb] bg-[#fbfcfe]">
+    <div
+      v-show="isLoading"
+      class="absolute inset-0 z-40 flex items-center justify-center bg-[rgba(250,250,252,0.88)]"
+    >
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[#c8ceda] border-t-[#222838]"></div>
     </div>
 
-    <div class="responsive_table">
-      <table>
+    <div class="w-full overflow-x-auto">
+      <table class="min-w-[980px] w-full border-collapse">
         <thead>
           <tr>
-            <td width="30">ID</td>
-            <td width="260">DATE</td>
-            <td width="170">LOG TYPE</td>
-            <td>DONE BY</td>
-            <td class="text_right" style="padding-right: 10px;">ACTION</td>
+            <th class="border-b border-[#dfe3ea] bg-[#f2f4f8] px-3 py-3 text-left text-[13px] font-semibold text-[#525a6c]">User</th>
+            <th class="border-b border-[#dfe3ea] bg-[#f2f4f8] px-3 py-3 text-left text-[13px] font-semibold text-[#525a6c]">Action</th>
+            <th class="border-b border-[#dfe3ea] bg-[#f2f4f8] px-3 py-3 text-left text-[13px] font-semibold text-[#525a6c]">Details</th>
+            <th class="border-b border-[#dfe3ea] bg-[#f2f4f8] px-3 py-3 text-left text-[13px] font-semibold text-[#525a6c]">Timestamp</th>
+            <th class="border-b border-[#dfe3ea] bg-[#f2f4f8] px-3 py-3 text-left text-[13px] font-semibold text-[#525a6c]">Table</th>
+            <th class="border-b border-[#dfe3ea] bg-[#f2f4f8] px-3 py-3 text-left text-[13px] font-semibold text-[#525a6c]">Status</th>
+            <th class="border-b border-[#dfe3ea] bg-[#f2f4f8] px-3 py-3 text-right text-[13px] font-semibold text-[#525a6c]">View</th>
           </tr>
         </thead>
 
-        <tr v-for="(log, index) in data" :key="`${log.id}-${index}`">
-          <td style="border-right: 1px solid #ddd;">{{ log.id }}</td>
-          <td>{{ log.log_date }} - {{ log.dateHumanize }}</td>
-          <td>
-            <template v-if="isDeleteOrLockout(log.log_type)">
-              <span class="badge emergency">{{ log.log_type }}</span>
-            </template>
-            <template v-else-if="log.log_type === 'create'">
-              <span class="badge info">{{ log.log_type }}</span>
-              <span class="lbl_table">to {{ log.table_name }}</span>
-            </template>
-            <template v-else-if="log.log_type === 'edit'">
-              <span class="badge warning edit_badge">{{ log.log_type }}</span>
-            </template>
-            <template v-else>
-              <span class="badge debug">{{ log.log_type }}</span>
-            </template>
-
-            <span v-if="isEditOrDelete(log.log_type)" class="lbl_table">from {{ log.table_name }}</span>
-          </td>
-
-          <td>
-            <strong>{{ log.user?.name }}</strong><br>
-            <span class="text_light">{{ log.user?.email }}</span>
-          </td>
-
-          <td class="action_column text_right">
-            <button class="btn_show" @click="emit('show', log)">SHOW</button>
-          </td>
-        </tr>
+        <tbody>
+          <tr v-for="(log, index) in data" :key="`${log.id}-${index}`" class="hover:bg-[#f8faff]">
+            <td class="border-b border-[#e8ebf1] px-3 py-2.5 align-top text-sm text-[#1f2330]">
+              <strong>{{ log.user?.name }}</strong><br>
+              <span class="text-sm text-[#767d8f]">ID: {{ log.user?.id }}</span>
+            </td>
+            <td class="border-b border-[#e8ebf1] px-3 py-2.5 align-top text-sm text-[#1f2330]">{{ actionLabel(log.log_type) }}</td>
+            <td class="border-b border-[#e8ebf1] px-3 py-2.5 align-top text-sm text-[#1f2330]">{{ detailsText(log) }}</td>
+            <td class="border-b border-[#e8ebf1] px-3 py-2.5 align-top text-sm text-[#1f2330]">
+              {{ log.log_date }}<br>
+              <span class="text-sm text-[#767d8f]">{{ log.dateHumanize }}</span>
+            </td>
+            <td class="border-b border-[#e8ebf1] px-3 py-2.5 align-top text-sm text-[#1f2330]">{{ log.table_name || '-' }}</td>
+            <td class="border-b border-[#e8ebf1] px-3 py-2.5 align-top text-sm text-[#1f2330]">
+              <span
+                class="inline-flex min-w-[78px] items-center justify-center rounded-full px-2.5 py-1 text-xs font-bold lowercase"
+                :class="{
+                  'bg-[#dff5e7] text-[#109a58]': statusLabel(log.log_type) === 'success',
+                  'bg-[#fff2cf] text-[#b37d00]': statusLabel(log.log_type) === 'warning',
+                  'bg-[#ffe0e0] text-[#dc3f3f]': statusLabel(log.log_type) === 'error',
+                }"
+              >
+                {{ statusLabel(log.log_type) }}
+              </span>
+            </td>
+            <td class="border-b border-[#e8ebf1] px-3 py-2.5 align-top text-right text-sm text-[#1f2330]">
+              <button
+                class="inline-flex h-8 items-center justify-center rounded-lg border border-[#ced4df] bg-white px-2.5 text-sm font-semibold text-[#1f2330] hover:bg-[#edf1f8]"
+                @click="emit('show', log)"
+              >
+                Open
+              </button>
+            </td>
+          </tr>
+        </tbody>
       </table>
 
-      <div class="pagination_wrapper">
+      <div class="flex justify-end px-3 pb-3.5 pt-3">
         <slot name="pagination"></slot>
       </div>
     </div>

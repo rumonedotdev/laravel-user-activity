@@ -3,10 +3,10 @@ import { computed } from 'vue'
 
 interface PaginationItem {
   title?: string
-  aClass?: string
   value: string | number
-  liClass?: string
   action: () => void
+  active?: boolean
+  disabled?: boolean
 }
 
 const props = withDefaults(
@@ -16,9 +16,6 @@ const props = withDefaults(
     total?: number
     disabled?: boolean
     dots?: string
-    ulClass?: string
-    activeClass?: string
-    disabledClass?: string
     adjacent?: number
     hideIfEmpty?: boolean
     showPrevNext?: boolean
@@ -28,10 +25,6 @@ const props = withDefaults(
     textLast?: string
     textNext?: string
     textPrev?: string
-    textFirstClass?: string
-    textLastClass?: string
-    textNextClass?: string
-    textPrevClass?: string
     textTitlePage?: string
     textTitleFirst?: string
     textTitleLast?: string
@@ -44,9 +37,6 @@ const props = withDefaults(
     total: 0,
     disabled: false,
     dots: '...',
-    ulClass: 'pagination',
-    activeClass: 'active',
-    disabledClass: 'disabled',
     adjacent: 2,
     hideIfEmpty: false,
     showPrevNext: false,
@@ -56,10 +46,6 @@ const props = withDefaults(
     textLast: 'Last',
     textNext: 'Next',
     textPrev: 'Prev',
-    textFirstClass: '',
-    textLastClass: '',
-    textNextClass: '',
-    textPrevClass: '',
     textTitlePage: 'Page {page}',
     textTitleFirst: 'First Page',
     textTitleLast: 'Last Page',
@@ -130,15 +116,11 @@ const state = computed(() => {
         continue
       }
 
-      let liClass = page === i ? props.activeClass : ''
-      if (isDisabled) {
-        liClass = props.disabledClass
-      }
-
       list.push({
         value: i,
         title: replacePageToken(props.textTitlePage, i),
-        liClass,
+        active: !isDisabled && page === i,
+        disabled: isDisabled,
         action: () => internalAction(i),
       })
     }
@@ -147,10 +129,8 @@ const state = computed(() => {
   const addDots = () => {
     list.push({
       value: props.dots,
-      liClass: props.disabledClass,
-      action: () => {
-        return
-      },
+      disabled: true,
+      action: () => undefined,
     })
   }
 
@@ -176,8 +156,8 @@ const state = computed(() => {
     }
 
     let disabled = false
-    let alpha: { value: string; title: string; aClass: string; page: number } | null = null
-    let beta: { value: string; title: string; aClass: string; page: number } | null = null
+    let alpha: { value: string; title: string; page: number } | null = null
+    let beta: { value: string; title: string; page: number } | null = null
 
     if (mode === 'prev') {
       disabled = page - 1 <= 0
@@ -187,7 +167,6 @@ const state = computed(() => {
         alpha = {
           value: props.textFirst,
           title: props.textTitleFirst,
-          aClass: props.textFirstClass,
           page: 1,
         }
       }
@@ -196,7 +175,6 @@ const state = computed(() => {
         beta = {
           value: props.textPrev,
           title: props.textTitlePrev,
-          aClass: props.textPrevClass,
           page: prevPage,
         }
       }
@@ -208,7 +186,6 @@ const state = computed(() => {
         alpha = {
           value: props.textNext,
           title: props.textTitleNext,
-          aClass: props.textNextClass,
           page: nextPage,
         }
       }
@@ -217,7 +194,6 @@ const state = computed(() => {
         beta = {
           value: props.textLast,
           title: props.textTitleLast,
-          aClass: props.textLastClass,
           page: pageCount,
         }
       }
@@ -227,11 +203,10 @@ const state = computed(() => {
       disabled = true
     }
 
-    const buildItem = (item: { value: string; title: string; aClass: string; page: number }): PaginationItem => ({
+    const buildItem = (item: { value: string; title: string; page: number }): PaginationItem => ({
       title: item.title,
-      aClass: item.aClass,
-      value: item.aClass ? '' : item.value,
-      liClass: disabled ? props.disabledClass : '',
+      value: item.value,
+      disabled,
       action: () => {
         if (!disabled) {
           internalAction(item.page)
@@ -285,14 +260,25 @@ const state = computed(() => {
 </script>
 
 <template>
-  <ul v-if="!state.hide" :class="ulClass">
+  <ul v-if="!state.hide" class="m-0 inline-flex list-none gap-1.5 p-0">
     <li
       v-for="(item, index) in state.list"
       :key="`${index}-${item.value}`"
       :title="item.title"
-      :class="item.liClass"
     >
-      <a href="" :class="item.aClass" @click.prevent="item.action()">{{ item.value }}</a>
+      <button
+        type="button"
+        :disabled="item.disabled"
+        class="inline-flex h-[34px] min-w-9 items-center justify-center rounded-lg border px-2.5 text-[13px] font-semibold"
+        :class="{
+          'border-[#171b24] bg-[#171b24] text-white': item.active,
+          'border-[#d3d8e2] bg-white text-[#232838] hover:border-[#171b24] hover:bg-[#171b24] hover:text-white': !item.active && !item.disabled,
+          'cursor-not-allowed border-[#e1e5ec] bg-[#f5f6f9] text-[#a3a9b8]': item.disabled,
+        }"
+        @click="item.action()"
+      >
+        {{ item.value }}
+      </button>
     </li>
   </ul>
 </template>
