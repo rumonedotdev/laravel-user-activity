@@ -10,6 +10,15 @@
 
 </head>
 <body>
+<script>
+    {{--window.__USER_ACTIVITY_BOOT__ = @json([--}}
+    {{--    'routePath' => url(config('user-activity.route_path')),--}}
+    {{--    'adminPanelPath' => url(config('user-activity.admin_panel_path')),--}}
+    {{--    'deleteLimit' => config('user-activity.delete_limit'),--}}
+    {{--    'tables' => array_values($tables),--}}
+    {{--    'csrfToken' => csrf_token(),--}}
+    {{--]);--}}
+</script>
 <div id="app"></div>
 </body>
 </html>
