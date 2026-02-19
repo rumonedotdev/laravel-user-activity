@@ -5,19 +5,16 @@ defineProps<{
 </script>
 
 <template>
-  <header class="fixed left-1/2 top-3 z-[120] grid h-12 w-[calc(100%-1.5rem)] max-w-[1460px] -translate-x-1/2 grid-cols-[1fr_auto] items-center border-b border-[#dddddf] bg-[#f7f7f8] px-3 sm:top-6 sm:h-[52px] sm:w-[calc(100%-3rem)] sm:grid-cols-[1fr_auto_1fr] sm:px-4">
-    <div class="inline-flex items-center gap-2 text-[13px] text-[#6e7480]">
-      <span class="inline-flex h-[18px] w-[18px] items-center justify-center rounded-md border border-[#b6bac4] text-[10px]">[]</span>
-      <span>AI</span>
+  <header class="fixed left-0 top-0 z-[120] flex min-h-[30px] w-full items-center justify-between bg-[#2e2e2f] px-[15px] py-[15px] shadow-[0_1px_3px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.24)]">
+    <div class="relative text-[25px] font-medium text-white">
+      <span class="absolute left-7 top-[-3px] text-[13px]">user</span>
+      <span class="mr-[3px] rounded bg-[#FFC107] px-[3px] font-semibold text-[#333]">A</span>
+      <span class="absolute left-7 top-[7px] text-[22px]">ctivity</span>
     </div>
 
-    <div class="col-span-2 row-start-2 mt-[-2px] justify-self-start text-base font-semibold text-[#1a1b1f] sm:col-span-1 sm:row-start-1 sm:mt-0 sm:justify-self-center sm:text-lg">
-      <span>User Activity Dashboard</span>
-    </div>
-
-    <div class="justify-self-end inline-flex items-center gap-2">
-      <a class="inline-flex items-center justify-center rounded-lg border border-[#d0d5dd] bg-[#fcfcfd] px-3 py-[7px] text-[13px] font-semibold text-[#495268] no-underline" :href="adminPanelPath">Admin</a>
-      <a class="inline-flex items-center justify-center rounded-lg bg-[#5b52f1] px-3 py-[7px] text-[13px] font-semibold text-white no-underline" href="https://laravelarticle.com/laravel-user-activity" title="Laravel User Activity">Share</a>
+    <div class="inline-flex items-center gap-2">
+      <a class="inline-flex items-center justify-center rounded-[25px] bg-white px-3 py-[5px] text-[13px] text-[#333] no-underline" :href="adminPanelPath">Goto Admin Panel</a>
+      <a class="inline-flex items-center justify-center rounded-[25px] bg-white px-3 py-[5px] text-[13px] text-[#333] no-underline" href="https://laravelarticle.com/laravel-user-activity" title="Laravel User Activity">Doc</a>
     </div>
   </header>
 </template>
