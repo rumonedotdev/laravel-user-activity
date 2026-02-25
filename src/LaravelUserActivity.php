@@ -8,66 +8,48 @@ use RuntimeException;
 class LaravelUserActivity
 {
     /**
-     * Vite manifest entry key for the dashboard app.
+     * Published public directory for package assets.
      */
-    const ENTRY_KEY = 'views/ts/main.ts';
+    private const ASSET_DIRECTORY = 'vendor/laravel-user-activity';
 
     /**
-     * Resolve and decode the Vite manifest.
-     *
-     * Priority:
-     * 1) Published assets in the consuming app public directory.
-     * 2) Local package dist directory (development fallback).
-     *
-     * @return array<string, mixed>
-     *
-     * @throws RuntimeException
+     * User Activity dashboard CSS file name.
      */
-    private static function getManifest()
+    private const CSS_FILE = 'style.css';
+
+    /**
+     * User Activity dashboard JavaScript file name.
+     */
+    private const JS_FILE = 'main.js';
+
+    /**
+     * Resolve full path for a published asset in the public directory.
+     */
+    private static function resolvePublicAssetPath(string $asset)
     {
-        $manifestCandidates = [];
-
-        if (function_exists('public_path')) {
-            $manifestCandidates[] = public_path('vendor/laravel-user-activity/.vite/manifest.json');
+        if (!function_exists('public_path')) {
+            throw new RuntimeException('Unable to resolve public path for User Activity assets.');
         }
 
-        $manifestCandidates[] = __DIR__ . '/../dist/.vite/manifest.json';
-
-        foreach ($manifestCandidates as $manifestPath) {
-            if (!is_file($manifestPath)) {
-                continue;
-            }
-
-            $manifestRaw = @file_get_contents($manifestPath);
-            if ($manifestRaw === false) {
-                continue;
-            }
-
-            $manifest = json_decode($manifestRaw, true);
-            if (is_array($manifest)) {
-                return $manifest;
-            }
-        }
-
-        throw new RuntimeException('Unable to locate User Activity asset manifest.');
+        return public_path(self::ASSET_DIRECTORY.'/'.ltrim($asset, '/'));
     }
 
     /**
-     * Base URL used for published dashboard assets.
-     *
-     * @return string
+     * Load a published public asset.
      */
-    private static function getAssetBaseUrl()
+    private static function loadPublicAsset(string $asset, string $description)
     {
-        if (function_exists('asset')) {
-            return rtrim(asset('vendor/laravel-user-activity'), '/');
+        $assetPath = self::resolvePublicAssetPath($asset);
+
+        if (($contents = @file_get_contents($assetPath)) === false) {
+            throw new RuntimeException("Unable to load the User Activity dashboard {$description} from [{$assetPath}].");
         }
 
-        return '/vendor/laravel-user-activity';
+        return $contents;
     }
 
     /**
-     * Get stylesheet tags for the User Activity dashboard.
+     * Get inline stylesheet for the User Activity dashboard.
      *
      * @return HtmlString
      *
@@ -75,27 +57,13 @@ class LaravelUserActivity
      */
     public static function css()
     {
-        $manifest = self::getManifest();
-        $entry = isset($manifest[self::ENTRY_KEY]) ? $manifest[self::ENTRY_KEY] : [];
-        $cssFiles = isset($entry['css']) && is_array($entry['css']) ? $entry['css'] : [];
+        $css = self::loadPublicAsset(self::CSS_FILE, 'CSS');
 
-        if (empty($cssFiles)) {
-            return new HtmlString('');
-        }
-
-        $baseUrl = self::getAssetBaseUrl();
-        $tags = [];
-
-        foreach ($cssFiles as $cssFile) {
-            $href = htmlspecialchars($baseUrl . '/' . ltrim($cssFile, '/'), ENT_QUOTES, 'UTF-8');
-            $tags[] = '<link rel="stylesheet" href="' . $href . '">';
-        }
-
-        return new HtmlString(implode("\n", $tags));
+        return new HtmlString("<style>{$css}</style>");
     }
 
     /**
-     * Get the JavaScript tag for the User Activity dashboard.
+     * Get inline JavaScript for the User Activity dashboard.
      *
      * @return HtmlString
      *
@@ -103,16 +71,12 @@ class LaravelUserActivity
      */
     public static function js()
     {
-        $manifest = self::getManifest();
-        $entry = isset($manifest[self::ENTRY_KEY]) ? $manifest[self::ENTRY_KEY] : [];
-        $jsFile = isset($entry['file']) ? $entry['file'] : null;
+        $js = self::loadPublicAsset(self::JS_FILE, 'JavaScript');
 
-        if (empty($jsFile)) {
-            throw new RuntimeException('Unable to locate the User Activity dashboard JavaScript.');
-        }
-
-        $src = htmlspecialchars(self::getAssetBaseUrl() . '/' . ltrim($jsFile, '/'), ENT_QUOTES, 'UTF-8');
-
-        return new HtmlString('<script type="module" src="' . $src . '"></script>');
+        return new HtmlString(<<<HTML
+            <script type="module">
+                {$js}
+            </script>
+            HTML);
     }
 }

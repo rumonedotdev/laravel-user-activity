@@ -20,7 +20,7 @@ class UserActivityInstall extends Command
      *
      * @var string
      */
-    protected $description = 'It will publish config file and run a migration for user log activity';
+    protected $description = 'It will publish config, migration and assets for user log activity';
 
     /**
      * Create a new command instance.
@@ -69,6 +69,10 @@ class UserActivityInstall extends Command
             $this->info("migration published");
         }
 
+        // assets
+        $this->publishAssets();
+        $this->info("assets published");
+
         $this->line('-----------------------------');
         if (!Schema::hasTable('logs')) {
             $this->call('migrate');
@@ -92,6 +96,15 @@ class UserActivityInstall extends Command
         $this->call('vendor:publish', [
             '--provider' => "Haruncpi\LaravelUserActivity\ServiceProvider",
             '--tag'      => 'migrations',
+            '--force'    => true
+        ]);
+    }
+
+    private function publishAssets()
+    {
+        $this->call('vendor:publish', [
+            '--provider' => "Haruncpi\LaravelUserActivity\ServiceProvider",
+            '--tag'      => 'assets',
             '--force'    => true
         ]);
     }

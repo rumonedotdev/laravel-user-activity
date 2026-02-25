@@ -1,0 +1,20 @@
+{
+  "views/css/style.css": {
+    "file": "style.css",
+    "src": "views/css/style.css",
+    "isEntry": true,
+    "name": "style",
+    "names": [
+      "style.css"
+    ]
+  },
+  "views/ts/main.ts": {
+    "file": "main.js",
+    "name": "main",
+    "src": "views/ts/main.ts",
+    "isEntry": true,
+    "css": [
+      "style.css"
+    ]
+  }
+}

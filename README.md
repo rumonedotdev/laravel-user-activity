@@ -25,6 +25,14 @@ Step 2 Now run this artisan command.
 php artisan user-activity:install
 ```
 
+This command publishes the package config, migration and frontend assets to your app (including `public/vendor/laravel-user-activity`).
+
+If you need to refresh the published frontend assets later, run:
+
+```
+php artisan vendor:publish --provider="Haruncpi\LaravelUserActivity\ServiceProvider" --tag=assets --force
+```
+
 
 Installation finished!
 
